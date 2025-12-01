@@ -146,6 +146,121 @@
         .clear-btn:active {
             transform: scale(0.98);
         }
+
+        .config-card {
+            background: #fff3e0;
+            border: 2px solid #ffb74d;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .config-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #e65100;
+        }
+
+        .config-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .config-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .config-control {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .wpm-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .wpm-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .wpm-value {
+            color: #e65100;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .wpm-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ffe0b2;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .wpm-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff9800;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .wpm-slider::-webkit-slider-thumb:hover {
+            background: #f57c00;
+        }
+
+        .wpm-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff9800;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s;
+        }
+
+        .wpm-slider::-moz-range-thumb:hover {
+            background: #f57c00;
+        }
+
+        .wpm-presets {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .preset-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 2px solid #ffb74d;
+            border-radius: 8px;
+            color: #e65100;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .preset-btn:hover {
+            background: #ffb74d;
+            color: white;
+        }
+
+        .preset-btn:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -172,10 +287,38 @@
             </div>
         </div>
 
+        <div class="config-card">
+            <div class="config-header">
+                <span class="config-icon">⚙️</span>
+                <span class="config-title">Reading Speed Configuration</span>
+            </div>
+            <div class="config-control">
+                <div class="wpm-display">
+                    <span class="wpm-label">Words per minute:</span>
+                    <span class="wpm-value" id="wpmValue">200</span>
+                </div>
+                <input
+                    type="range"
+                    id="wpmSlider"
+                    class="wpm-slider"
+                    min="100"
+                    max="400"
+                    value="200"
+                    step="10"
+                >
+                <div class="wpm-presets">
+                    <button class="preset-btn" onclick="setWPM(150)">Slow (150)</button>
+                    <button class="preset-btn" onclick="setWPM(200)">Average (200)</button>
+                    <button class="preset-btn" onclick="setWPM(250)">Fast (250)</button>
+                    <button class="preset-btn" onclick="setWPM(300)">Very Fast (300)</button>
+                </div>
+            </div>
+        </div>
+
         <div class="time-display">
             <div class="time-label">Estimated Reading Time</div>
             <div class="time-value" id="timeDisplay">0m 0s</div>
-            <div class="reading-speed">Based on 200 words per minute</div>
+            <div class="reading-speed" id="readingSpeed">Based on 200 words per minute</div>
         </div>
 
         <button class="clear-btn" onclick="clearText()">Clear Text</button>
@@ -186,9 +329,12 @@
         const wordCountEl = document.getElementById('wordCount');
         const charCountEl = document.getElementById('charCount');
         const timeDisplayEl = document.getElementById('timeDisplay');
+        const readingSpeedEl = document.getElementById('readingSpeed');
+        const wpmSlider = document.getElementById('wpmSlider');
+        const wpmValueEl = document.getElementById('wpmValue');
 
-        // Average reading speed (words per minute)
-        const WORDS_PER_MINUTE = 200;
+        // Reading speed (words per minute) - configurable
+        let wordsPerMinute = 200;
 
         function countWords(text) {
             if (!text.trim()) return 0;
@@ -199,7 +345,7 @@
         function calculateReadingTime(wordCount) {
             if (wordCount === 0) return { minutes: 0, seconds: 0 };
 
-            const totalMinutes = wordCount / WORDS_PER_MINUTE;
+            const totalMinutes = wordCount / wordsPerMinute;
             const minutes = Math.floor(totalMinutes);
             const seconds = Math.round((totalMinutes - minutes) * 60);
 
@@ -217,6 +363,18 @@
             timeDisplayEl.textContent = `${minutes}m ${seconds}s`;
         }
 
+        function updateWPM() {
+            wordsPerMinute = parseInt(wpmSlider.value);
+            wpmValueEl.textContent = wordsPerMinute;
+            readingSpeedEl.textContent = `Based on ${wordsPerMinute} words per minute`;
+            updateStats();
+        }
+
+        function setWPM(wpm) {
+            wpmSlider.value = wpm;
+            updateWPM();
+        }
+
         function clearText() {
             textInput.value = '';
             updateStats();
@@ -225,6 +383,9 @@
 
         // Update stats on input
         textInput.addEventListener('input', updateStats);
+
+        // Update WPM when slider changes
+        wpmSlider.addEventListener('input', updateWPM);
 
         // Initialize on page load
         updateStats();
